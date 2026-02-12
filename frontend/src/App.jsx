@@ -37,16 +37,47 @@ export default function App() {
   const [blockedUntil, setBlockedUntil] = useState(null);
   const [timerText, setTimerText] = useState("");
   const [searchVariant, setSearchVariant] = useState("search");
+  const [winImageVariant, setWinImageVariant] = useState("won");
+  const [fireworksActive, setFireworksActive] = useState(false);
   const [claimToken, setClaimToken] = useState(initialClaimToken);
   const [contactStatus, setContactStatus] = useState({ message: "", type: "" });
   const [contactName, setContactName] = useState("");
   const [contactEmail, setContactEmail] = useState("");
   const [contactPhone, setContactPhone] = useState("");
   const winAudioRef = useRef(null);
+  const failAudioRef = useRef(null);
+  const winImageTimerRef = useRef(null);
+  const fireworksTimerRef = useRef(null);
 
   const isWinnerView = view === "contact" || view === "success";
   const isBlocked = blockedUntil && blockedUntil > Date.now();
   const canSubmitCode = code.length === 3 && !isBlocked;
+
+  useEffect(() => {
+    if (!isWinnerView) {
+      setFireworksActive(false);
+      setWinImageVariant("won");
+      if (winImageTimerRef.current) {
+        clearTimeout(winImageTimerRef.current);
+        winImageTimerRef.current = null;
+      }
+      if (fireworksTimerRef.current) {
+        clearTimeout(fireworksTimerRef.current);
+        fireworksTimerRef.current = null;
+      }
+    }
+  }, [isWinnerView]);
+
+  useEffect(() => {
+    return () => {
+      if (winImageTimerRef.current) {
+        clearTimeout(winImageTimerRef.current);
+      }
+      if (fireworksTimerRef.current) {
+        clearTimeout(fireworksTimerRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -137,6 +168,20 @@ export default function App() {
 
     if (response.ok && data?.ok) {
       setSearchVariant("won");
+      setWinImageVariant("won");
+      setFireworksActive(true);
+      if (winImageTimerRef.current) {
+        clearTimeout(winImageTimerRef.current);
+      }
+      if (fireworksTimerRef.current) {
+        clearTimeout(fireworksTimerRef.current);
+      }
+      winImageTimerRef.current = window.setTimeout(() => {
+        setWinImageVariant("sunglasses");
+      }, 9700);
+      fireworksTimerRef.current = window.setTimeout(() => {
+        setFireworksActive(false);
+      }, 23000);
       if (winAudioRef.current) {
         winAudioRef.current.currentTime = 0;
         winAudioRef.current.play().catch(() => {});
@@ -160,10 +205,18 @@ export default function App() {
       case "wrong_code":
         setCodeStatus({ message: `Fel kod. Försök kvar: ${data.remaining}`, type: "error" });
         setSearchVariant("lost");
+        if (failAudioRef.current) {
+          failAudioRef.current.currentTime = 0;
+          failAudioRef.current.play().catch(() => {});
+        }
         break;
       case "blocked": {
         setCodeStatus({ message: "För många fel. Du är spärrad en stund.", type: "error" });
         setSearchVariant("lost");
+        if (failAudioRef.current) {
+          failAudioRef.current.currentTime = 0;
+          failAudioRef.current.play().catch(() => {});
+        }
         const until = Date.parse(data.blockedUntil);
         if (!Number.isNaN(until)) {
           setBlockedUntil(until);
@@ -216,7 +269,7 @@ export default function App() {
   return (
     <>
       <div className="ambient" />
-      {isWinnerView ? (
+      {isWinnerView && fireworksActive ? (
         <div className="fireworks" aria-hidden="true">
           <span />
           <span />
@@ -229,8 +282,8 @@ export default function App() {
           <span />
         </div>
       ) : null}
-      {view === "code" ? <div className="sound-note">Ljud: På</div> : null}
       <audio ref={winAudioRef} src="/audio/won.mp3" preload="auto" />
+      <audio ref={failAudioRef} src="/audio/fail.mp3" preload="auto" />
       <main className="page">
         <div className="side-word">
           {isWinnerView ? (
@@ -291,7 +344,7 @@ export default function App() {
 
           <div className={`view ${view === "contact" ? "is-active" : ""}`} data-view="contact">
             <h2>Lämna dina uppgifter</h2>
-            <p className="muted">V kontaktar dig snarast.</p>
+            <p className="muted win-subtext">V kontaktar dig snarast.</p>
             <form onSubmit={handleContactSubmit}>
               <label className="field">
                 <span>Namn</span>
@@ -325,7 +378,7 @@ export default function App() {
               <button type="submit">Skicka</button>
             </form>
             <div className={`status ${contactStatus.type}`}>{contactStatus.message}</div>
-            <div className="won-slot" aria-hidden="true" />
+            <div className={`won-slot ${winImageVariant === "sunglasses" ? "is-sunglasses" : ""}`} aria-hidden="true" />
           </div>
 
           <div className={`view ${view === "closed" ? "is-active" : ""}`} data-view="closed">
@@ -341,6 +394,11 @@ export default function App() {
           </div>
         </section>
       </main>
+      <footer className="page-footer" aria-hidden="true">
+        <div className="sound-note">{view === "code" ? "Ljud: På" : ""}</div>
+        <div className="copyright">© Gymkompaniet AB</div>
+        <div />
+      </footer>
     </>
   );
 }
