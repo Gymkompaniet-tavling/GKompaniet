@@ -25,11 +25,15 @@ async function fetchJSON(url, options = {}) {
 }
 
 function sanitizeCode(value) {
-  return value.replace(/\D/g, "").slice(0, 3);
+  return value.replace(/[^0-9A-Za-z]/g, "").slice(0, 4);
 }
 
 export default function App() {
   const initialClaimToken = useMemo(() => sessionStorage.getItem("claimToken") || "", []);
+  const initialWinnerSubmitted = useMemo(
+    () => sessionStorage.getItem("winnerSubmitted") === "true",
+    [],
+  );
 
   const [view, setView] = useState(initialClaimToken ? "contact" : "code");
   const [code, setCode] = useState("");
@@ -37,6 +41,7 @@ export default function App() {
   const [blockedUntil, setBlockedUntil] = useState(null);
   const [timerText, setTimerText] = useState("");
   const [searchVariant, setSearchVariant] = useState("search");
+  const [winnerSubmitted, setWinnerSubmitted] = useState(initialWinnerSubmitted);
   const [winImageVariant, setWinImageVariant] = useState("won");
   const [fireworksActive, setFireworksActive] = useState(false);
   const [claimToken, setClaimToken] = useState(initialClaimToken);
@@ -51,7 +56,7 @@ export default function App() {
 
   const isWinnerView = view === "contact" || view === "success";
   const isBlocked = blockedUntil && blockedUntil > Date.now();
-  const canSubmitCode = code.length === 3 && !isBlocked;
+  const canSubmitCode = code.length === 4 && !isBlocked;
 
   useEffect(() => {
     if (!isWinnerView) {
@@ -67,6 +72,13 @@ export default function App() {
       }
     }
   }, [isWinnerView]);
+
+  useEffect(() => {
+    document.body.classList.toggle("closed-mobile-cover", view === "closed");
+    return () => {
+      document.body.classList.remove("closed-mobile-cover");
+    };
+  }, [view]);
 
   useEffect(() => {
     return () => {
@@ -88,6 +100,11 @@ export default function App() {
         const { response, data } = await fetchJSON(endpoints.status);
         if (!active) return;
 
+        if (response.ok && data && data.closed === false) {
+          sessionStorage.removeItem("winnerSubmitted");
+          setWinnerSubmitted(false);
+        }
+
         if (claimToken) {
           setView("contact");
           setCodeStatus({ message: "", type: "" });
@@ -99,6 +116,10 @@ export default function App() {
         }
 
         if (data.closed) {
+          if (winnerSubmitted) {
+            setView("success");
+            return;
+          }
           setView("closed");
         } else {
           setView("code");
@@ -154,7 +175,7 @@ export default function App() {
     const sanitized = sanitizeCode(code);
     setCode(sanitized);
 
-    if (sanitized.length !== 3 || isBlocked) {
+    if (sanitized.length !== 4 || isBlocked) {
       return;
     }
 
@@ -253,13 +274,21 @@ export default function App() {
 
     if (response.ok && data?.ok) {
       setView("success");
+      setWinnerSubmitted(true);
+      sessionStorage.setItem("winnerSubmitted", "true");
+      sessionStorage.removeItem("claimToken");
+      setClaimToken("");
       return;
     }
 
     if (data?.reason === "unauthorized") {
       sessionStorage.removeItem("claimToken");
       setClaimToken("");
-      setView("closed");
+      if (winnerSubmitted) {
+        setView("success");
+      } else {
+        setView("closed");
+      }
       return;
     }
 
@@ -285,30 +314,32 @@ export default function App() {
       <audio ref={winAudioRef} src="/audio/won.mp3" preload="auto" />
       <audio ref={failAudioRef} src="/audio/fail.mp3" preload="auto" />
       <main className="page">
-        <div className="side-word">
-          {isWinnerView ? (
-            <>
-              <p className="side-win-title">BOOM! VINST!</p>
-              <p className="side-win-sub">Grattis till 30 000 kr i gymutrustning!</p>
-              <blockquote className="side-quote">
-                <p>
-                  &quot;Av alla som stod vid startlinjen var det du som tog dig hela vägen. En ensam
-                  segrare. En tydlig etta. Grattis — vinsten är din.&quot;
-                </p>
-                <footer>— Joel Lövernberg, Gymkompaniet Ab</footer>
-              </blockquote>
-            </>
-          ) : (
-            <>
-              <p className="side-body">Wow! Att du har hittat hit betyder att du är nära.</p>
-              <p className="side-body">Sitt lugnt i båten.</p>
-              <p className="side-body">Du har tre försök att skriva in rätt kod – sedan är det stopp.</p>
-              <p className="side-body">Det finns bara en vinnare. Kommer det bli du?</p>
-              <p className="side-final">En sista ledtråd:</p>
-          <p className="side-emphasis">Spegelvänt</p>
-            </>
-          )}
-        </div>
+        {view !== "closed" ? (
+          <div className="side-word">
+            {isWinnerView ? (
+              <>
+                <p className="side-win-title">BOOM! VINST!</p>
+                <p className="side-win-sub">Grattis till 30 000 kr i gymutrustning!</p>
+                <blockquote className="side-quote">
+                  <p>
+                    &quot;Av alla som stod vid startlinjen var det du som tog dig hela vägen. En ensam
+                    segrare. En tydlig etta. Grattis — vinsten är din.&quot;
+                  </p>
+                  <footer>— Joel Lövernberg, Gymkompaniet Ab</footer>
+                </blockquote>
+              </>
+            ) : (
+              <>
+                <p className="side-body">Wow! Att du har hittat hit betyder att du är nära.</p>
+                <p className="side-body">Sitt lugnt i båten.</p>
+                <p className="side-body">Du har tre försök att skriva in rätt kod – sedan är det stopp.</p>
+                <p className="side-body">Det finns bara en vinnare. Kommer det bli du?</p>
+                <p className="side-final">En sista ledtråd:</p>
+                <p className="side-emphasis">Spegelvänt</p>
+              </>
+            )}
+          </div>
+        ) : null}
         <section className="panel" aria-live="polite">
           <div className={`view ${view === "code" ? "is-active" : ""}`} data-view="code">
             <h2>Skriv in koden:</h2>
@@ -317,11 +348,11 @@ export default function App() {
                 <input
                   id="code-input"
                   type="text"
-                  inputMode="numeric"
-                  pattern="\d{3}"
-                  maxLength={3}
+                  inputMode="text"
+                  pattern="[0-9A-Z]{4}"
+                  maxLength={4}
                   autoComplete="one-time-code"
-                  placeholder="___"
+                  placeholder="____"
                   value={code}
                   onChange={handleCodeChange}
                 />
@@ -382,15 +413,34 @@ export default function App() {
           </div>
 
           <div className={`view ${view === "closed" ? "is-active" : ""}`} data-view="closed">
-            <h2>Någon hann före</h2>
-            <p className="muted">Priset är redan taget. Bättre lycka nästa gång!</p>
-            <div className="stamp">CLOSED</div>
+            <h2>Attans någon hann före...</h2>
+            <p className="muted">Tävlingen är avgjord priset är redan taget</p>
+            <blockquote className="side-quote">
+              <p>
+                Tystnaden efter mållinjen säger allt:
+                <br />
+                Någon var först.
+                <br />
+                Men dina steg hit räknas också.
+                <br />
+                Den som vågar förlora
+                <br />
+                har redan börjat lära sig att vinna.
+                <br />
+                Men glöm inte: i dag förlorade DU!
+                <br />
+                <br />
+                Vi ses i nästa omgång.
+              </p>
+              <footer>— Joel Löwenberg, Gymkompaniet AB</footer>
+            </blockquote>
           </div>
 
           <div className={`view ${view === "success" ? "is-active" : ""}`} data-view="success">
             <h2>Tack! Vi hör av oss.</h2>
-            <p className="muted">Din information är mottagen. Ha en fin dag!</p>
-            <div className="confetti" aria-hidden="true" />
+            <a className="logo-link" href="https://gymkompaniet.se" target="_blank" rel="noreferrer">
+              <img className="logo-image" src="/images/gymkompaniet_1.webp" alt="Gymkompaniet" />
+            </a>
           </div>
         </section>
       </main>

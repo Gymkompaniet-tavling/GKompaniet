@@ -1,5 +1,6 @@
 import os
 import hashlib
+import re
 import secrets
 from datetime import datetime, timezone, timedelta
 
@@ -125,7 +126,7 @@ async def status():
 @app.post("/api/enter-code")
 async def enter_code(body: EnterCodeBody, request: Request):
     code = (body.code or "").strip()
-    if not code or not code.isdigit() or len(code) != 3:
+    if not re.fullmatch(r"[0-9A-Z]{4}", code):
         return JSONResponse({"ok": False, "reason": "invalid_format"}, status_code=400)
 
     actor_hash = get_actor_hash(request)
