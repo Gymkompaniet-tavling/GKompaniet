@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 const apiBase = import.meta.env.VITE_API_BASE || "http://localhost:8000";
 const endpoints = {
@@ -42,6 +42,7 @@ export default function App() {
   const [contactName, setContactName] = useState("");
   const [contactEmail, setContactEmail] = useState("");
   const [contactPhone, setContactPhone] = useState("");
+  const winAudioRef = useRef(null);
 
   const isWinnerView = view === "contact" || view === "success";
   const isBlocked = blockedUntil && blockedUntil > Date.now();
@@ -136,6 +137,10 @@ export default function App() {
 
     if (response.ok && data?.ok) {
       setSearchVariant("won");
+      if (winAudioRef.current) {
+        winAudioRef.current.currentTime = 0;
+        winAudioRef.current.play().catch(() => {});
+      }
       setClaimToken(data.claimToken);
       sessionStorage.setItem("claimToken", data.claimToken);
       setView("contact");
@@ -211,6 +216,21 @@ export default function App() {
   return (
     <>
       <div className="ambient" />
+      {isWinnerView ? (
+        <div className="fireworks" aria-hidden="true">
+          <span />
+          <span />
+          <span />
+          <span />
+          <span />
+          <span />
+          <span />
+          <span />
+          <span />
+        </div>
+      ) : null}
+      {view === "code" ? <div className="sound-note">Ljud: På</div> : null}
+      <audio ref={winAudioRef} src="/audio/won.mp3" preload="auto" />
       <main className="page">
         <div className="side-word">
           {isWinnerView ? (
@@ -232,7 +252,7 @@ export default function App() {
               <p className="side-body">Du har tre försök att skriva in rätt kod – sedan är det stopp.</p>
               <p className="side-body">Det finns bara en vinnare. Kommer det bli du?</p>
               <p className="side-final">En sista ledtråd:</p>
-              <p className="side-emphasis">Felvänt</p>
+          <p className="side-emphasis">Spegelvänt</p>
             </>
           )}
         </div>

@@ -4,7 +4,9 @@
   --bg: #0a0e0d;
   --ink: #f5f7f6;
   --muted: #c2c9c6;
-  --accent: #e4ff3d;
+  --accent: #819e30;
+  --accent-hover: #9fbe3a;
+  --accent-shadow: rgba(129, 158, 48, 0.35);
   --accent-2: #7aa6ff;
   --panel: rgba(10, 14, 13, 0.78);
   --shadow: 0 28px 80px rgba(0, 0, 0, 0.35);
@@ -132,6 +134,8 @@ form {
   display: grid;
   gap: 1.2rem;
   margin-top: 1.5rem;
+  width: 100%;
+  justify-items: stretch;
 }
 
 .side-word {
@@ -180,6 +184,7 @@ form {
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--ink);
+  animation: win-blink 1.4s steps(2, start) infinite;
 }
 
 .side-win-sub {
@@ -214,10 +219,140 @@ form {
   color: var(--muted);
 }
 
+.fireworks {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 5;
+}
+
+.sound-note {
+  position: fixed;
+  left: 2rem;
+  bottom: 2rem;
+  z-index: 6;
+  font-family: "Space Mono", monospace;
+  font-size: 0.85rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink);
+  opacity: 0.8;
+}
+
+.fireworks span {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: transparent;
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0);
+  filter: drop-shadow(0 0 6px rgba(228, 255, 61, 0.6));
+  box-shadow:
+    0 -26px #e4ff3d,
+    18px -18px #7aa6ff,
+    26px 0 #ff8d7a,
+    18px 18px #f0f36d,
+    0 26px #7fffd4,
+    -18px 18px #ffb347,
+    -26px 0 #9d7bff,
+    -18px -18px #e4ff3d,
+    0 -38px #ffffff;
+  animation: firework-pop 1.8s ease-out infinite;
+}
+
+.fireworks span:nth-child(1) {
+  left: 18%;
+  top: 22%;
+  animation-delay: 0s;
+}
+
+.fireworks span:nth-child(2) {
+  left: 35%;
+  top: 34%;
+  animation-delay: 0.5s;
+}
+
+.fireworks span:nth-child(3) {
+  left: 55%;
+  top: 20%;
+  animation-delay: 0.9s;
+}
+
+.fireworks span:nth-child(4) {
+  left: 78%;
+  top: 28%;
+  animation-delay: 0.2s;
+}
+
+.fireworks span:nth-child(5) {
+  left: 25%;
+  top: 60%;
+  animation-delay: 0.7s;
+}
+
+.fireworks span:nth-child(6) {
+  left: 45%;
+  top: 72%;
+  animation-delay: 1.1s;
+}
+
+.fireworks span:nth-child(7) {
+  left: 68%;
+  top: 56%;
+  animation-delay: 1.4s;
+}
+
+.fireworks span:nth-child(8) {
+  left: 82%;
+  top: 68%;
+  animation-delay: 0.4s;
+}
+
+.fireworks span:nth-child(9) {
+  left: 12%;
+  top: 72%;
+  animation-delay: 1.2s;
+}
+
+@keyframes firework-pop {
+  0% {
+    transform: translate(-50%, -50%) scale(0.2);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  60% {
+    transform: translate(-50%, -50%) scale(1.2);
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1.7);
+    opacity: 0;
+  }
+}
+
+@keyframes win-blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  65% {
+    opacity: 0.2;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
 .field {
   display: grid;
   gap: 0.4rem;
   font-size: 0.9rem;
+  width: 100%;
 }
 
 input {
@@ -228,6 +363,7 @@ input {
   font-family: "Space Mono", monospace;
   background: rgba(8, 12, 12, 0.65);
   color: var(--ink);
+  width: 100%;
 }
 
 input::placeholder {
@@ -250,11 +386,13 @@ button {
   font-size: 1rem;
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  width: 100%;
 }
 
 button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(228, 255, 61, 0.35);
+  background: var(--accent-hover);
+  box-shadow: 0 10px 25px var(--accent-shadow);
 }
 
 button:disabled {
@@ -289,17 +427,17 @@ button:disabled {
   width: 100%;
   aspect-ratio: 16 / 9;
   border-radius: 18px;
-  background: url("/images/Search.png") center/cover no-repeat;
+  background: url("/images/Search.webp") center/cover no-repeat;
   border: 1px solid rgba(255, 255, 255, 0.12);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
 }
 
 .search-slot.is-lost {
-  background-image: url("/images/Lost.png");
+  background-image: url("/images/Lost.webp");
 }
 
 .search-slot.is-won {
-  background-image: url("/images/Won.png");
+  background-image: url("/images/Won.webp");
 }
 
 .won-slot {
@@ -307,7 +445,7 @@ button:disabled {
   width: 100%;
   aspect-ratio: 16 / 9;
   border-radius: 18px;
-  background: url("/images/Won.png") center/cover no-repeat;
+  background: url("/images/Won.webp") center/cover no-repeat;
   border: 1px solid rgba(255, 255, 255, 0.12);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
 }
@@ -390,5 +528,14 @@ button:disabled {
 
   button {
     transition: none;
+  }
+
+  .fireworks span {
+    animation: none;
+    opacity: 0;
+  }
+
+  .side-win-title {
+    animation: none;
   }
 }
