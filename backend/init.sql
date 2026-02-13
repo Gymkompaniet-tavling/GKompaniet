@@ -1,4 +1,3 @@
--- Init schema for contest
 CREATE TABLE IF NOT EXISTS contest_state (
   id integer PRIMARY KEY CHECK (id = 1),
   winner_actor_hash text,
