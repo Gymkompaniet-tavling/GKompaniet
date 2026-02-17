@@ -292,7 +292,7 @@ export default function App() {
         break;
       }
       case "invalid_format":
-        setCodeStatus({ message: "Ange exakt fyra tecken (A-Z eller 0-9).", type: "error" });
+        setCodeStatus({ message: "Ange exakt fyra tecken (a-z, A-Z eller 0-9).", type: "error" });
         break;
       default:
         setCodeStatus({ message: "Något gick fel. Försök igen.", type: "error" });
@@ -402,7 +402,7 @@ export default function App() {
                   id="code-input"
                   type="text"
                   inputMode="text"
-                  pattern="[0-9A-Z]{4}"
+                  pattern="[0-9A-Za-z]{4}"
                   maxLength={4}
                   autoComplete="one-time-code"
                   placeholder="____"

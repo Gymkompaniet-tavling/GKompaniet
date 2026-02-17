@@ -174,7 +174,7 @@ async def status():
 @app.post("/api/enter-code")
 async def enter_code(body: EnterCodeBody, request: Request):
     code = (body.code or "").strip()
-    if not re.fullmatch(r"[0-9A-Z]{4}", code):
+    if not re.fullmatch(r"[0-9A-Za-z]{4}", code):
         return JSONResponse({"ok": False, "reason": "invalid_format"}, status_code=400)
 
     actor_hash = get_actor_hash(request)
