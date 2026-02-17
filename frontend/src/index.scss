@@ -106,6 +106,12 @@ body {
   min-height: clamp(320px, 45vh, 520px);
 }
 
+.page.is-closed-layout .panel {
+  grid-column: 1 / -1;
+  justify-self: center;
+  width: min(680px, 100%);
+}
+
 .panel::before {
   content: "";
   position: absolute;
@@ -652,6 +658,10 @@ button:disabled {
 
   .sound-note {
     font-size: 0.75rem;
+  }
+
+  .view[data-view="closed"] h2 {
+    font-size: clamp(1.35rem, 4.6vw, 1.6rem);
   }
 }
 

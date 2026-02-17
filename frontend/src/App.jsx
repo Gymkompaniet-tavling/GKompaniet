@@ -368,7 +368,7 @@ export default function App() {
           Du skickas nu till gymkompaniet.se ...
         </div>
       ) : null}
-      <main className="page">
+      <main className={`page ${view === "closed" ? "is-closed-layout" : ""}`}>
         {view !== "closed" ? (
           <div className="side-word">
             {isWinnerView ? (
