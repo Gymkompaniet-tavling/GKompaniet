@@ -299,10 +299,9 @@ async def submit_contact(body: SubmitContactBody, _request: Request):
 
             email_sent = False
             if SMTP_HOST and SMTP_TO and SMTP_FROM:
-                subject = "Ny vinnare - Gymkompaniet"
+                subject = "Vinnare - Gymkompaniet-tävling"
                 lines = [
-                    "En vinnare har skickat in sina uppgifter.",
-                    "",
+                    "Vinnare:",
                     f"Namn: {body.name.strip()}",
                     f"E-post: {body.email.strip()}",
                 ]
