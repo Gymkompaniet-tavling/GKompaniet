@@ -6,6 +6,7 @@ const winnerRedirectDelayMs = 6000;
 const assetBase = import.meta.env.BASE_URL || "/";
 const assetUrl = (path) => `${assetBase}${path.replace(/^\/+/, "")}`;
 const DEVICE_STORAGE_KEY = "gk_device_id";
+const FORCE_HOMEPAGE_CLOSED = true;
 const endpoints = {
   status: `${apiBase}/api/status`,
   enter: `${apiBase}/api/enter-code`,
@@ -72,7 +73,7 @@ function sanitizeCode(value) {
 }
 
 export default function App() {
-  const [view, setView] = useState("code");
+  const [view, setView] = useState(FORCE_HOMEPAGE_CLOSED ? "closed" : "code");
   const [code, setCode] = useState("");
   const [codeStatus, setCodeStatus] = useState({ message: "", type: "" });
   const [blockedUntil, setBlockedUntil] = useState(null);
@@ -142,6 +143,13 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    if (FORCE_HOMEPAGE_CLOSED) {
+      if (view !== "closed") {
+        setView("closed");
+      }
+      return;
+    }
+
     let active = true;
 
     const loadStatus = async (silent = false) => {
@@ -493,7 +501,6 @@ export default function App() {
               <footer>— Joel Löwenberg, Gymkompaniet AB</footer>
             </blockquote>
           </div>
-
         </section>
       </main>
       <footer className="page-footer" aria-hidden="true">
